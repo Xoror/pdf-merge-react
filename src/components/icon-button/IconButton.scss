@@ -1,0 +1,32 @@
+.icon-button {
+    --color: var(--danger);
+    box-sizing: border-box;
+    color: var(--color, white);
+    background-color: var(--bg-color, transparent);
+    border: 1px solid var(--border-color, transparent);
+
+    padding-block: auto;
+    padding-inline: 0.25rem;
+    min-height: 1rem;
+    min-width: 1rem;
+    //margin-right: 0.5ch;
+    display: grid;
+    place-content: center;
+
+    &:hover {
+        --color: white;
+    }
+    &:active {
+        --bg-color: rgba(0, 0, 0, 0.35);
+    }
+
+    svg {
+        transform: scaleY(1);
+        transition: transform 200ms ease-in-out;
+    }
+    &[aria-expanded="true"] {
+        svg {
+            transform: scaleY(-1);
+        }
+    }
+}

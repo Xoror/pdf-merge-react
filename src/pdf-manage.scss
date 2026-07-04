@@ -1,0 +1,163 @@
+#root {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: "content";
+}
+
+.pdf-merge {
+    //height:  calc(100% - var(--nav-bar-height));
+    grid-row: content;
+    display: grid;
+    grid-template-columns: [margin-start] 1fr [margin-end content-start] 100% [content-end margin-start] 1fr [margin-end];
+    justify-items: center;
+    > * {
+        grid-column: content;
+    }
+    .sg-button {
+        width: fit-content;
+    }
+}
+.dnd-zone {
+    --bg-color: var(--sg-body-bg);
+    position: relative;
+    background-color: var(--bg-color);
+    border: 2px outset white;
+    height: 100%;
+    padding: 1rem;
+    width: 100%;
+    overflow: auto;
+
+    display: grid;
+    grid-template-columns: [margin-start] 1fr [margin-end content-start] auto [content-end margin-start] 1fr [margin-end];
+    > * {
+        grid-column: content;
+    }
+    align-items: center;
+    justify-items: center;
+    transition: background-color 150ms ease-in-out;
+    &.drag-hover {
+        background-color: color-mix(in oklab, var(--bg-color), white 10%);
+    }
+    --inset: 0px;
+    --border-width: 0;
+    &.drag-hover {
+        --inset: 0.5rem;
+        --border-width: 2px;
+    }
+    &::after {
+        content: "";
+        position: absolute;
+        inset: var(--inset);
+        border: var(--border-width) outset white;
+        transition: all 150ms ease-in-out;
+        pointer-events: none;
+        clip-path: polygon(0% 0%, 10% 0%, 10% 5%, 90% 5%, 90% 0%, 100% 0%, 100% 10%, 95% 10%, 95% 90%, 100% 90%, 100% 100%, 90% 100%, 90% 95%, 10% 95%, 10% 100%, 0% 100%, 0% 90%, 5% 90%, 5% 10%, 0% 10%, 0% 0%);
+    }
+}
+.dnd-label {
+    grid-column: content;
+    display: grid;
+    justify-items: center;
+    > p {
+        margin-bottom: 0;
+    }
+    gap: 0.75rem;
+}
+
+.upload-error {
+    position: relative;
+    width: 20ch;
+    padding: 1rem 1.5rem;
+    border: 2px solid var(--warning);
+    text-align: justify;
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border: 3px dashed var(--warning)
+    }
+}
+
+.uploaded-files {
+    grid-column: content;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--sg-body-bg);
+    //width: auto;
+    label {
+        padding: 0.25rem 0.5rem;
+        text-align: center;
+    }
+    .uploaded-files-list {
+        padding-left: 0;
+        list-style: none;
+        li {
+            &:first-child {
+                border-top: 1px solid rgba(255, 255, 255, 0.6);
+            }
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            > {
+                div {
+                    .vr {
+                        height: 4ex;
+                    }
+                    .sg-form-group {
+                        padding: 0;
+                    }
+                    .page-form-group {
+                        display: grid;
+                        grid-template-columns: auto 7ch;
+                        grid-template-rows: auto;
+                    }
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    p {
+                        display: grid;
+                        align-items: center;
+                        margin: 0;
+                        width: 15ch;
+                        overflow: auto;
+                        height: 3rem;
+                        scrollbar-gutter: stable both-edges;
+                    }
+                }
+            }
+        }
+    }
+    .files-list-button {
+        --color: var(--danger);
+         h
+        &:hover {
+            --color: white;
+        }
+        &:active {
+            --bg-color: rgba(0, 0, 0, 0.35);
+        }
+    }
+}
+
+.uploaded-files-controls {
+    grid-column: content;
+    display: grid;
+    grid-template-areas: 
+        "form1 form1"
+        "form2 form2"
+        "button1 button2"
+    ;
+    grid-template-columns: auto auto auto;
+    grid-template-rows: auto auto auto;
+    button:nth-of-type(1) {
+        grid-area: button1;
+    }
+    button:nth-of-type(2) {
+        grid-area: button2;
+    }
+    .sg-form-group:nth-of-type(1) {
+        grid-area: form1;
+    }
+    .sg-form-group:nth-of-type(2) {
+        grid-area: form2;
+    }
+}

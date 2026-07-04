@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
 import ErrorArray from './ErrorArray'
-import { error } from 'console'
 
 describe('ErrorArray', () => {
 
@@ -87,7 +86,7 @@ describe('ErrorArray', () => {
     test('does splice work and create new array and keep error', () => {
         const errorArray = new ErrorArray(1,3,4,5).setError("test error")
         errorArray.splice(1,0,2)
-        const expected = new ErrorArray(1,2,3,4,5).setError("test error")
+        //const expected = new ErrorArray(1,2,3,4,5).setError("test error")
 
         const errorArray2 = new ErrorArray(1,6,3,4,5).setError("test error")
         const testReturn = errorArray2.splice(1,1,2)

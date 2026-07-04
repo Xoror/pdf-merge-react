@@ -136,7 +136,7 @@ const PdfMerge = () => {
             }
         }
         console.log(mergedPdf.getPageIndices())
-        const pdfBytes = await mergedPdf.save()
+        const pdfBytes = await mergedPdf.save() as unknown as ArrayBuffer
         const blob = new Blob([pdfBytes], { type: 'application/pdf' })
         const a = document.createElement('a')
         a.download = formData.get("mergedLabel")! as string

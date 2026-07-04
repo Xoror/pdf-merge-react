@@ -1,13 +1,18 @@
 import mergeSort from "./MergeSort"
 
 class ErrorArray<T> extends Array<T> {
-    static from<T, U>(input: ArrayLike<T> | Iterable<T>, mapfn?: (v: T, k: number) => U, thisArg?: any): ErrorArray<T> {
-        let parsedArray: T[] = []
+    static from<T, U>(input: ArrayLike<T> | Iterable<T>): ErrorArray<T>
+    static from<T, U>(input: ArrayLike<T> | Iterable<T>, mapfn: (v: T, k: number) => U): ErrorArray<U>
+    static from<T, U>(input: ArrayLike<T> | Iterable<T>, mapfn?: (v: T, k: number) => U): ErrorArray<T | U> {
+        let parsedArray = []
         if(Array.isArray(input)) {
             parsedArray = input
         } else if(Symbol.iterator in input && (typeof input[Symbol.iterator] === "function")) {
+            let index = 0
             for( let value of input) {
-                parsedArray.push(value)
+                const newValue = mapfn ? mapfn(value, index) : value
+                parsedArray.push(newValue)
+                index++
             }
         } else {
             throw new Error("Argument for ErrorArray.from has to be iterable!")
@@ -32,7 +37,6 @@ class ErrorArray<T> extends Array<T> {
         return newErrorArray
     }
     toArray(): T[] {
-        const test = new Array()
         return [...this];
     }
     setError(error: string): this {

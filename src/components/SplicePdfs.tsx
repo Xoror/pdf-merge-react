@@ -35,7 +35,7 @@ const SplicePdfs = () => {
     
     }
     if(spliceOrder.length === 0 && files.length > 0) {
-        setSpliceOrder((prev) => {
+        setSpliceOrder(() => {
             return files.map(file => ({
                 id: crypto.randomUUID(),    
                 label: file.label,

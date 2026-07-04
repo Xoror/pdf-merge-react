@@ -11,7 +11,8 @@ type SortableListType<T extends Array<any>> = {
 } & DetailedHTMLProps<HTMLAttributes<HTMLUListElement>, HTMLUListElement>
 
 const SortableList = <T extends {label: string, id: string}[], >({data, setData, render, ...restProps}: SortableListType<T>) => {
-    const handleSortClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, type: "up" | "down", currentIndex: number) => {
+    const handleSortClick = (type: "up" | "down", currentIndex: number) => {
+        /*event: React.MouseEvent<HTMLButtonElement, MouseEvent>*/
         const indexChange = type === "up" ? -1 : 1
         let newIndex = currentIndex + indexChange
         if(newIndex < 0) newIndex = 0
@@ -42,12 +43,12 @@ const SortableList = <T extends {label: string, id: string}[], >({data, setData,
                         </IconButton>
                         {render(file, index)}
                         {index > 0 ?
-                            <IconButton className="files-list-button" label={`move file ${file.label} one place up`} onClick={event => handleSortClick(event, "up", index)}>
+                            <IconButton className="files-list-button" label={`move file ${file.label} one place up`} onClick={() => handleSortClick( "up", index)}>
                                 <CaretUpIcon weight="bold" size="1.5rem" aria-hidden="true"/>
                             </IconButton> : null
                         }
                         {index < data.length - 1 ? 
-                            <IconButton className="files-list-button" label={`move file ${file.label} one place down`} onClick={event => handleSortClick(event, "down", index)}>
+                            <IconButton className="files-list-button" label={`move file ${file.label} one place down`} onClick={() => handleSortClick( "down", index)}>
                                 <CaretDownIcon weight="bold" size="1.5rem" aria-hidden="true"/>
                             </IconButton> : null
                         }

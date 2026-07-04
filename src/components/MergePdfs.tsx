@@ -15,7 +15,7 @@ const MergePdfs = () => {
                 <label>Order in which to merge files</label>
                 <SortableList 
                     className="uploaded-files-list" data={files} setData={setFiles}
-                    render={(file, index) => <p>{file.label}</p>} 
+                    render={(file,) => <p>{file.label}</p>} 
                 />
             </div>
             <div className="uploaded-files-controls">

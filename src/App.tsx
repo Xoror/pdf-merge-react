@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import "./pdf-manage.scss"
 
 import { FileArrowDownIcon } from "@phosphor-icons/react"
@@ -9,11 +9,18 @@ import Tabs from "./components/basic-ui/Tabs"
 import SplicePdfs from "./components/SplicePdfs"
 
 import FileUploadButton from "./components/file-upload-button/FileUploadButton"
-import { PDFDocument, PDFPage } from 'pdf-lib'
+import { PDFDocument, } from 'pdf-lib'
 import { windowsFileNameAllowed } from "./utils/regex"
 import ErrorArray from "./utils/ErrorArray"
 import debounce from "./utils/debounce"
 import { type FileObject, type FormStateType, PDFContextProvider, type PDFContextType } from "./context/PDFContext"
+import type { WorkerInputype, WorkerReturnType } from "./workers/pdfWorker/pdfWorker"
+
+interface TypedWorker<Input, Output> extends Worker {
+    postMessage(message: Input, transfer: Transferable[]): void
+    postMessage(message: Input, options?: StructuredSerializeOptions): void
+    onmessage: ((this: Worker, ev: MessageEvent<Output>) => void) | null
+}
 
 const PDFTabs = [
     {
@@ -27,17 +34,54 @@ const PDFTabs = [
         component: SplicePdfs
     }
 ] as const
-type PDFTabIds = ((typeof PDFTabs) extends readonly (infer U)[] ? U : never)["id"]
+export type PDFTabIds = ((typeof PDFTabs) extends readonly (infer U)[] ? U : never)["id"]
 
 const PdfMerge = () => {
     const dndZoneRef = useRef<HTMLFormElement>(null)
     const [files, setFiles] = useState(new ErrorArray<FileObject>())
     const [ formState, setFormState ] = useState<FormStateType>({
-        name: "mergedLabel",
-        defaultValue: ""
+        label: {
+            name: "mergedLabel",
+        },
+        compression: {
+            name: "compressionLevel",
+            defaultValue: "none"
+        }
     })
+    const [imageSrc, setImageSrc] = useState("")
     const [activeTab, setActiveTab] = useState<PDFTabIds>("merge")
     const hasFiles = files.length != 0
+
+    const workerRef = useRef<TypedWorker<WorkerInputype, WorkerReturnType> | null>(null)
+    useEffect(() => {
+        let worker = workerRef.current
+        if(!worker) {
+            worker = workerRef.current = new Worker(new URL("./workers/pdfWorker/pdfWorker.ts", import.meta.url), {type: "module"})
+        }
+        worker.onmessage = (event) => {
+            const { mergedPdf, label } = event.data 
+            console.log(mergedPdf)
+            const blob = new Blob([mergedPdf.buffer], { type: "application/pdf" })
+            const a = document.createElement("a")
+            a.download = label
+            const uri = URL.createObjectURL(blob)
+            a.href = uri
+            const clickEvt = new MouseEvent("click", {
+                view: window,
+                bubbles: true,
+                cancelable: true,
+            })
+            a.dispatchEvent(clickEvt)
+            a.remove()
+            URL.revokeObjectURL(uri)
+        }
+        
+        return function cleanup() {
+            if(!worker) return
+            worker.terminate()
+            workerRef.current = null
+        }
+    }, [])
     
     const handleTabChange = (tabId: PDFTabIds) => {
         setActiveTab(tabId)
@@ -57,7 +101,7 @@ const PdfMerge = () => {
         for(let file of filteredFiles) {
             const pdfFilesBuffer = await file.arrayBuffer()
             const pdfFile = await PDFDocument.load(pdfFilesBuffer)
-            pdfFiles.push({id: file.name, label: file.name, data: pdfFile, pages: pdfFile.getPageCount()})
+            pdfFiles.push({id: crypto.randomUUID(), label: file.name, data: pdfFilesBuffer, pages: pdfFile.getPageCount()})
         }
          setFiles(prev => {
             const newFiles = prev.concat(pdfFiles)
@@ -82,72 +126,25 @@ const PdfMerge = () => {
         }
         return error
     }
-    const mergeAndDownload = async (event: React.FormEvent<HTMLFormElement>) => {
+    const mergeAndDownload = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
         const form = dndZoneRef.current
         if(!form) return
         if(formState.error) return
         if(!files) return
-        const mergedPdf = await PDFDocument.create()
-        const formData = new FormData(form)
-        if(activeTab === "splice") {
-            const formDataArray = Array.from(formData)
-            const pageOrder = [] as { label: string, fromPage: any, toPage: any }[]
-            formDataArray.forEach((entry,) => {
-                if(entry[0].includes(`-`)) {
-                    const fileIndex = parseInt( entry[0].split("-")[0] )
-                    if(pageOrder[fileIndex] === undefined) pageOrder[fileIndex] = {} as { label: string, fromPage: string, toPage: string }
-                    const label = entry[0].split("-")[1] as keyof { label: string, fromPage: string, toPage: string }
-                    const value = entry[1]
-                    pageOrder[fileIndex][label] = value
-                }
-            })
-            const pagesByFile = {} as {[label: string]: PDFPage[]}
-            for (const file of files) {
-                //const arrayBuffer = await file.arrayBuffer()
-                //const pdf = await PDFDocument.load(arrayBuffer)
-                const pdf = file.data
-                const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices())
-
-                pagesByFile[file.label] = pages as PDFPage[]
+        console.log(form)
+        const formData = new FormData()
+        Array.from(form).forEach(el => {
+            const element = el as HTMLFormElement
+            if(element.name && !formData.get(element.name)) {
+                formData.set(element.name, element.value)
             }
-            pageOrder.forEach((entry, ) => {
-                const { label, fromPage, toPage} = entry
-                const fileData = files.find(file => file.label === label)
-                if(!fileData) return
-                const pages = pagesByFile[label]
-                pages.forEach((page, index) => {
-                    if(index >= fromPage - 1 && index <= toPage - 1) {
-                        mergedPdf.addPage(page)
-                        //newPages.push(page)
-                    }
-                })
-            })
-        }
-        if(activeTab === "merge") { 
-            
-            for (const file of files) {
-                //const arrayBuffer = await file.arrayBuffer()
-                //const pdf = await PDFDocument.load(arrayBuffer)
-                const pdf = file.data
-                const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices())
-
-                pages.forEach(page => mergedPdf.addPage(page))
-            }
-        }
-        console.log(mergedPdf.getPageIndices())
-        const pdfBytes = await mergedPdf.save() as unknown as ArrayBuffer
-        const blob = new Blob([pdfBytes], { type: 'application/pdf' })
-        const a = document.createElement('a')
-        a.download = formData.get("mergedLabel")! as string
-        a.href = window.URL.createObjectURL(blob)
-        const clickEvt = new MouseEvent('click', {
-            view: window,
-            bubbles: true,
-            cancelable: true,
         })
-        a.dispatchEvent(clickEvt)
-        a.remove()
+        console.log(formData)
+        const formDataArray = Array.from(formData)
+        const worker = workerRef.current
+        if(!worker) return
+        worker.postMessage({files: files.toArray(), formData: formDataArray, type: activeTab})
     }
     const handleChange: PDFContextType["handleChange"] = debounce((event) => {
         const target = event.target
@@ -197,6 +194,7 @@ const PdfMerge = () => {
     return (
         <PDFContextProvider context={context}>
             <div className="pdf-merge">
+                {imageSrc ? <img src={imageSrc} /> : null}
                 <Form 
                     ref={dndZoneRef} className="dnd-zone"
                     onSubmit={mergeAndDownload}

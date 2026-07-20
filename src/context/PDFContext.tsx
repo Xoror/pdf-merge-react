@@ -6,14 +6,20 @@ import { PDFDocument } from "pdf-lib"
 import { type ErrorType } from "../components/basic-ui/Form"
 
 export type FormStateType = {
-    name: string,
-    defaultValue: string,
+    label: {
+        name: "mergedLabel",
+        //defaultValue: string
+    },
+    compression: {
+        name: "compressionLevel",
+        defaultValue:"none"
+    },
     error?: ErrorType
 }
 export type FileObject = {
     id: string,
     label: string,
-    data: PDFDocument,
+    data: ArrayBuffer,
     pages: number
 }
 

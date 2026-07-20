@@ -3,11 +3,12 @@ import "./MergePdfs.scss"
 import Button from "./basic-ui/Button"
 import Form from "./basic-ui/Form"
 import SortableList from "./sortable-list/SortableList"
+import UploadedFilesControls from "./uploaded-files-controls/UploadedFilesControls"
 
 import { usePDFContext } from "../context/PDFContext"
 
 const MergePdfs = () => {
-    const {files, setFiles, formState, handleChange, clearFiles} = usePDFContext()
+    const {files, setFiles} = usePDFContext()
 
     return(
         <div className="merge-container">
@@ -18,14 +19,7 @@ const MergePdfs = () => {
                     render={(file,) => <p>{file.label}</p>} 
                 />
             </div>
-            <div className="uploaded-files-controls">
-                    <Form.Group controlId="merged-file-label">
-                        <Form.Label>Merged File Name</Form.Label>
-                        <Form.Control as="input" type="text" inputMode="text" onChange={handleChange} {...formState}/>
-                    </Form.Group>
-                    <Button type="submit">Merge and Download</Button>
-                    <Button onClick={clearFiles}>Clear</Button>
-            </div>
+            <UploadedFilesControls />
         </div>
     )
 }

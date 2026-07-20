@@ -26,7 +26,9 @@ const SortableList = <T extends {label: string, id: string}[], >({data, setData,
     }
     const handleDeleteFile = (index: number) => {
         setData(prev => {
+            console.log(prev)
             const newFilesList = prev.slice(0, index).concat(prev.slice(index+1, prev.length)) as typeof prev
+            console.log(newFilesList)
             return newFilesList
         })
     }

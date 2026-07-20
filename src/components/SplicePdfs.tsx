@@ -9,6 +9,7 @@ import Vr from "./vertical-separator/Vr"
 import { usePDFContext } from "../context/PDFContext"
 import ErrorArray from "../utils/ErrorArray"
 import SortableList from "./sortable-list/SortableList"
+import UploadedFilesControls from "./uploaded-files-controls/UploadedFilesControls"
 
 type SpliceOrderEntry = {
     id: string,
@@ -19,8 +20,17 @@ type SpliceOrderEntry = {
 }
 
 const SplicePdfs = () => {
-    const {files, formState, handleChange, clearFiles} = usePDFContext()
-    const [spliceOrder, setSpliceOrder] = useState<Array<SpliceOrderEntry>>([])
+    const {files} = usePDFContext()
+    const [spliceOrder, setSpliceOrder] = useState<Array<SpliceOrderEntry>>(() => {
+        if(files.length === 0) return []
+        return files.map(file => ({
+            id: crypto.randomUUID(),    
+            label: file.label,
+            fromPage: 1,
+            toPage: file.pages,
+            pages: file.pages
+        }))
+    })
     const [fileToAdd, setFileToAdd] = useState("")
    
     const hasDeletedFiles = useMemo(() => {
@@ -33,17 +43,6 @@ const SplicePdfs = () => {
             return prev.filter(file => !hasDeletedFiles.includes(file.label))
         })
     
-    }
-    if(spliceOrder.length === 0 && files.length > 0) {
-        setSpliceOrder(() => {
-            return files.map(file => ({
-                id: crypto.randomUUID(),    
-                label: file.label,
-                fromPage: 1,
-                toPage: file.pages,
-                pages: file.pages
-            }))
-        })
     }
 
     const handleAddFileChange = (event: (React.ChangeEvent<HTMLButtonElement> & { target: { value?: any }})) => {
@@ -90,7 +89,7 @@ const SplicePdfs = () => {
                     className="uploaded-files-list" data={spliceOrder} setData={setSpliceOrder}
                 />
             </div>
-            <div className="uploaded-files-controls">
+            <UploadedFilesControls>
                 <Form.Group controlId="add-file-to-splice">
                     <Form.Label>Add File to splice</Form.Label>
                     <Form.Select value={fileToAdd} onChange={handleAddFileChange}>
@@ -101,13 +100,7 @@ const SplicePdfs = () => {
                     </Form.Select>
                     <Button onClick={handleAddFile} style={{width:"100%"}}>Add</Button>
                 </Form.Group>
-                <Form.Group controlId="merged-file-label">
-                    <Form.Label>Merged File Name</Form.Label>
-                    <Form.Control as="input" type="text" inputMode="text" onChange={handleChange} {...formState}/>
-                </Form.Group>
-                <Button type="submit">Merge and Download</Button>
-                <Button onClick={clearFiles}>Clear</Button>
-            </div>
+            </UploadedFilesControls>
         </div>
     )
 }

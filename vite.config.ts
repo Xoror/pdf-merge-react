@@ -28,7 +28,6 @@ export default defineConfig({
     },
     plugins: [
         react(),
-        visualizer(),
-        babel({ presets: [reactCompilerPreset()] })
+        visualizer(),        babel({ presets: [reactCompilerPreset()] })
     ],
 })

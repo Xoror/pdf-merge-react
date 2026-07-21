@@ -1,4 +1,4 @@
-import { PDFName, PDFObject, PDFPage, PDFRawStream, PDFRef } from "pdf-lib"
+import { PDFName, PDFPage, PDFRawStream, PDFRef } from "pdf-lib"
 import isEqual from "../../../utils/isEqual"
 import type { PDFImageData } from "./types"
 

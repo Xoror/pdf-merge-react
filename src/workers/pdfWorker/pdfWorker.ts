@@ -1,4 +1,4 @@
-import { PDFDocument, PDFPage } from "pdf-lib"
+import { PDFDocument, PDFName, PDFNumber, PDFPage, PDFRawStream, PDFRef } from "pdf-lib"
 import type { FileObject } from "../../context/PDFContext"
 import type { PDFTabIds } from "../../App"
 import { deflate, inflate } from "pako"
@@ -55,62 +55,43 @@ self.onmessage = async (event: MessageEvent<WorkerInputype>) => {
     const mergedPdf = await PDFDocument.create()
     
     const label = formData.find(keyValuePair => keyValuePair[0] === "mergedLabel")![1]
-    console.log(formData)
+    
     const compressionLevelId = formData.find(keyValuePair => keyValuePair[0] === "compressionLevel")![1] as CompressionLevelsIds
     const compressionLevel = compressionLevels.find(level => level.id === compressionLevelId) ?? {jpgQuality: 1, pngLevel: 6}
-    console.log(compressionLevel)
+    
     const pagesByFile = {} as {[id: string]: PDFPage[]}
     for(const file of files) {
         const pdf = await PDFDocument.load(file.data)   
         const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices())
-        console.log(compressionLevelId)
+        
         if(compressionLevelId != "none") {
             for(const page of pages) {
                 //console.log(page)
-                const keysToImages = getXObjectsFromPage(page)
+                const keysToImages = getXObjectsFromPage(page) as PDFRef[]
                 const imagesData = getImagesData(page, keysToImages)
 
                 for( const data of imagesData) {
+                    const objectToChange = page.node.context.lookup(data.key)! as PDFRawStream
+                    
                     if(data.filter === "/DCTDecode") {
                         const compressedJpg = await compressJpg(data, compressionLevel.jpgQuality)
-                        const indirectObjects = page.node.context.indirectObjects.get(data.key)
-                        page.node.context.indirectObjects.get(data.key).contents = compressedJpg
-                        //console.log(indirectObjects.dict.dict)
-                        for(const entry of indirectObjects.dict.dict) {
-                                const [key, value] = entry
-                                if(key.encodedName === "/Width") {
-                                    
-                                    //indirectObjects.dict.dict.set(key, {numberValue: (value.numberValue*0.8), stringValue: (value.numberValue*0.8).toString()})
-                                }
-                                if(key.encodedName === "/Height") {
-                                    //indirectObjects.dict.dict.set(key, {numberValue: (value.numberValue*0.8), stringValue: (value.numberValue*0.8).toString()})
-                                }
-                                //console.log(indirectObjects.dict.dict)
-                            }
+                        const newCompressedObject = PDFRawStream.of(objectToChange.dict, compressedJpg)
+                        page.node.context.assign(data.key, newCompressedObject)
                     } else {
                         const { compressedColorBitArray, compressedAlphaBitArray } = compressPng(data, compressionLevel.pngLevel)
                         
-                        page.node.context.indirectObjects.get(data.key).contents = compressedColorBitArray
-                        const colorDictToChange = page.node.context.indirectObjects.get(data.key).dict.dict
-                        for(const entry of colorDictToChange) {
-                            const [key, value] = entry
-                            if(key.encodedName === "/Length") {
-                                colorDictToChange.set(key, {numberValue: compressedColorBitArray.length, stringValue: compressedColorBitArray.length.toString()})
-                            }
-                        }
-
+                        const newCompressedColorObject = PDFRawStream.of(objectToChange.dict, compressedColorBitArray)
+                        newCompressedColorObject.dict.set(PDFName.of("Length"), PDFNumber.of(compressedColorBitArray.length))
+                        
+                        page.node.context.assign(data.key, newCompressedColorObject)
+                        
                         if(compressedAlphaBitArray) {
-                            page.node.context.indirectObjects.get(data.maskKey).contents = compressedAlphaBitArray
-                            const maskDictToChange = page.node.context.indirectObjects.get(data.maskKey).dict.dict
-                            for(const entry of colorDictToChange) {
-                                const [key, value] = entry
-                                if(key.encodedName === "/Length") {
-                                    maskDictToChange.set(key, {numberValue: compressedAlphaBitArray.length, stringValue: compressedAlphaBitArray.length.toString()})
-                                }
-                            }
+                            const newCompressedalphaObject = PDFRawStream.of(objectToChange.dict, compressedAlphaBitArray)
+                            newCompressedalphaObject.dict.set(PDFName.of("Length"), PDFNumber.of(compressedAlphaBitArray.length))
+                            
+                            page.node.context.assign(data.key, newCompressedalphaObject)
                         }
                     }
-                    
                 }
             }
         }
@@ -154,5 +135,5 @@ self.onmessage = async (event: MessageEvent<WorkerInputype>) => {
     
     const pdfBytes = await mergedPdf.save() as unknown as ArrayBuffer
     
-    self.postMessage({mergedPdf: pdfBytes, label})
+    //self.postMessage({mergedPdf: pdfBytes, label})
 }

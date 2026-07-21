@@ -1,8 +1,8 @@
-import { PDFName, PDFObject, PDFPage, PDFRawStream } from "pdf-lib"
+import { PDFName, PDFObject, PDFPage, PDFRawStream, PDFRef } from "pdf-lib"
 import isEqual from "../../../utils/isEqual"
 import type { PDFImageData } from "./types"
 
-export const getImagesData = (page: PDFPage,imageKeys: PDFObject[]) => {
+export const getImagesData = (page: PDFPage,imageKeys: PDFRef[]) => {
     const imagesData = []
     for(const key of imageKeys) {
         const indirectObjects = page.node.context.enumerateIndirectObjects()
@@ -17,7 +17,7 @@ export const getImagesData = (page: PDFPage,imageKeys: PDFObject[]) => {
         
         const data: PDFImageData = {
             key,
-            maskKey: undefined,
+            maskKey: imageObject.dict.get(PDFName.of("SMask")) as PDFRef | undefined,
             bitArray: imageObject.contents,
             maskBitArray: getProperty("SMask") ? getProperty("SMask").contents : undefined,
             type: getProperty("Type").encodedName,
@@ -28,13 +28,7 @@ export const getImagesData = (page: PDFPage,imageKeys: PDFObject[]) => {
             bitsPerComponent: getProperty("BitsPerComponent").numberValue,
             filter: getProperty("Filter").encodedName,
         }
-        for(const entry of imageObject.dict.dict) {
-            const [key, value] = entry
-            if(key.encodedName === "/SMask") {
-                data.maskKey = value
-            }
-        }
-        //console.log(data)
+        
         imagesData.push(data)
     }
     return imagesData

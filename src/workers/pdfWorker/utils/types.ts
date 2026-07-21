@@ -1,8 +1,8 @@
-import type { PDFObject } from "pdf-lib"
+import type { PDFObject, PDFRef } from "pdf-lib"
 
 export type PDFImageData = {
-    key: PDFObject,
-    maskKey?: PDFObject,
+    key: PDFRef,
+    maskKey?: PDFRef,
     bitArray: Uint8Array<ArrayBufferLike>,
     maskBitArray?: Uint8Array<ArrayBufferLike>,
     type: string,

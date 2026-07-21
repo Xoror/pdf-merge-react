@@ -1,8 +1,6 @@
 import { PDFDocument, PDFName, PDFNumber, PDFPage, PDFRawStream, PDFRef } from "pdf-lib"
 import type { FileObject } from "../../context/PDFContext"
 import type { PDFTabIds } from "../../App"
-import { deflate, inflate } from "pako"
-import { PNG } from "pngjs/browser"
 import { getXObjectsFromPage } from "./utils/getXObjectsFromPage"
 import { getImagesData } from "./utils/getImagesData"
 import { compressJpg } from "./utils/compressJpg"
@@ -57,7 +55,7 @@ self.onmessage = async (event: MessageEvent<WorkerInputype>) => {
     const label = formData.find(keyValuePair => keyValuePair[0] === "mergedLabel")![1]
     
     const compressionLevelId = formData.find(keyValuePair => keyValuePair[0] === "compressionLevel")![1] as CompressionLevelsIds
-    const compressionLevel = compressionLevels.find(level => level.id === compressionLevelId) ?? {jpgQuality: 1, pngLevel: 6}
+    const compressionLevel = getCompressionLevelById(compressionLevelId) ?? {jpgQuality: 1, pngLevel: 6}
     
     const pagesByFile = {} as {[id: string]: PDFPage[]}
     for(const file of files) {
@@ -135,5 +133,5 @@ self.onmessage = async (event: MessageEvent<WorkerInputype>) => {
     
     const pdfBytes = await mergedPdf.save() as unknown as ArrayBuffer
     
-    //self.postMessage({mergedPdf: pdfBytes, label})
+    self.postMessage({mergedPdf: pdfBytes, label})
 }

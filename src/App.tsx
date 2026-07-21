@@ -48,7 +48,6 @@ const PdfMerge = () => {
             defaultValue: "none"
         }
     })
-    const [imageSrc, setImageSrc] = useState("")
     const [activeTab, setActiveTab] = useState<PDFTabIds>("merge")
     const hasFiles = files.length != 0
 
@@ -194,7 +193,7 @@ const PdfMerge = () => {
     return (
         <PDFContextProvider context={context}>
             <div className="pdf-merge">
-                {imageSrc ? <img src={imageSrc} /> : null}
+                
                 <Form 
                     ref={dndZoneRef} className="dnd-zone"
                     onSubmit={mergeAndDownload}

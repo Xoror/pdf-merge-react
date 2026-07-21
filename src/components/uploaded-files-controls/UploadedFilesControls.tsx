@@ -10,7 +10,7 @@ import { usePDFContext } from "../../context/PDFContext"
 type UploadedFilesControlsProps = {
     children?: ReactNode
 }
-const selectHint = {message:"The effectiveness of compression depends a heavily on the document in question, so try multiple levels of compression to find one that fits your need. THere is a chance even high won't do a lot of compression if it's jsut a text document hough."}
+//const selectHint = {message:"The effectiveness of compression depends a heavily on the document in question, so try multiple levels of compression to find one that fits your need. THere is a chance even high won't do a lot of compression if it's jsut a text document hough."}
 const UploadedFilesControls = ({children}: UploadedFilesControlsProps) => {
     const { files, handleChange, clearFiles, formState } = usePDFContext()
     return(

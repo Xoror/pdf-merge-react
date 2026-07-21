@@ -1,7 +1,5 @@
 import "./MergePdfs.scss"
 
-import Button from "./basic-ui/Button"
-import Form from "./basic-ui/Form"
 import SortableList from "./sortable-list/SortableList"
 import UploadedFilesControls from "./uploaded-files-controls/UploadedFilesControls"
 

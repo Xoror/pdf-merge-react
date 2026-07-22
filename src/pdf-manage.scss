@@ -18,6 +18,9 @@
         width: fit-content;
     }
 }
+.sg-tabs-page {
+    background-color: var(--sg-body-bg);
+}
 .dnd-zone {
     --bg-color: var(--sg-body-bg);
     position: relative;
@@ -36,14 +39,15 @@
     align-items: center;
     justify-items: center;
     transition: background-color 150ms ease-in-out;
-    &.drag-hover {
-        background-color: color-mix(in oklab, var(--bg-color), white 10%);
-    }
     --inset: 0px;
     --border-width: 0;
     &.drag-hover {
+        background-color: color-mix(in oklab, var(--bg-color), white 10%);
         --inset: 0.5rem;
         --border-width: 2px;
+        * {
+            pointer-events: none;
+        }
     }
     &::after {
         content: "";
